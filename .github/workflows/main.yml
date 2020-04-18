@@ -18,6 +18,7 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      - shell: bash
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     #- uses: actions/checkout@v2
 #    - env:
@@ -39,7 +40,7 @@ jobs:
         export TARGET_REPO=https://github.com/asteroid-team/$REPO_NAME
         echo $SRC_REPO to $TARGET_REPO
         git config --global credential.username $GIT_USERNAME
-        git config --global core.askPass $GIT_PASSWORD
+        git config --global core.askPass "$GIT_PASSWORD"
         git config --global credential.helper cache
         git clone --mirror $SRC_REPO
         cd ${REPO_NAME}.git
