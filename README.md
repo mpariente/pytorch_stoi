@@ -1,10 +1,17 @@
 ## PyTorch implementation of STOI
 [![Build Status][travis-badge]][travis]
+[![PyPI Status](https://badge.fury.io/py/torch-stoi.svg)](https://badge.fury.io/py/torch-stoi)
+
 
 Implementation of the classical and extended Short 
 Term Objective Intelligibility in PyTorch.
 See also [Cees Taal's website](http://www.ceestaal.nl/code/) and 
 the [python implementation](https://github.com/mpariente/pystoi)
+
+### Install
+```bash
+pip install torch_stoi
+```
 
 ## Important warning
 **This implementation is intended to be used as a loss function only.**  
@@ -15,12 +22,25 @@ as a loss function. See the Notes in the
  
 Quantitative comparison coming soon hopefully :rocket:
 
-### Install
-
-Ontoit
-
 ### Usage
-Ontoit
+```python
+import torch
+from torch import nn
+from torch_stoi import NegSTOILoss
+
+sample_rate = 16000
+loss_func = NegSTOILoss(sample_rate=sample_rate)
+# Your nnet and optimizer definition here
+nnet = nn.Module()
+
+noisy_speech = torch.randn(2, 16000)
+clean_speech = torch.randn(2, 16000)
+# Estimate clean speech
+est_speech = nnet(noisy_speech)
+# Compute loss and backward (then step etc...)
+loss_batch = loss_func(est_speech, clean_speech)
+loss_batch.mean().backward()
+```
 
 ### References
 * [1] C.H.Taal, R.C.Hendriks, R.Heusdens, J.Jensen 'A Short-Time
