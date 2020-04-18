@@ -42,6 +42,10 @@ jobs:
         git clone --mirror $SRC_REPO
         echo "CD into mirror"
         cd ${REPO_NAME}.git
+        echo '#!/bin/sh' > passwd_giver.sh
+        echo "exec echo \"\$GIT_PASSWORD\"" >> passwd_giver.sh
+        chmod +x passwd_giver.sh
+        git config --global core.askPass ./passwd_giver.sh
         git config --global credential.username $GIT_USERNAME
         git config --global credential.helper cache
         git remote set-url --push origin $TARGET_REPO
@@ -55,4 +59,4 @@ jobs:
         REPO_NAME: pytorch_stoi
 #        SRC_REPO: https://github.com/$GIT_USERNAME/$REPO_NAME
 #        TARGET_REPO: https://github.com/asteroid-team/$REPO_NAME
-      #git config --global core.askPass ./.github/workflows/passwd_giver.sh
+      #
