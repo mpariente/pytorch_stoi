@@ -33,7 +33,7 @@ jobs:
 
     # Runs a set of commands using the runners shell
     - name: Clone source repo and push to target
-      shell: bash
+      shell: sh
       run: |
         set -eu
         export SRC_REPO=https://github.com/$GIT_USERNAME/$REPO_NAME
