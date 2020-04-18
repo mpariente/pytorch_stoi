@@ -35,6 +35,9 @@ jobs:
     - name: Clone source repo and push to target
       run: |
         set -eu
+        export SRC_REPO=https://github.com/$GIT_USERNAME/$REPO_NAME
+        export TARGET_REPO=https://github.com/asteroid-team/$REPO_NAME
+        echo $SRC_REPO to $TARGET_REPO
         git config --global credential.username $GIT_USERNAME
         git config --global core.askPass $GIT_PASSWORD
         git config --global credential.helper cache
@@ -49,5 +52,5 @@ jobs:
         GIT_USERNAME: mpariente
         GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
         REPO_NAME: pytorch_stoi
-        SRC_REPO: https://github.com/$GIT_USERNAME/$REPO_NAME
-        TARGET_REPO: https://github.com/asteroid-team/$REPO_NAME
+#        SRC_REPO: https://github.com/$GIT_USERNAME/$REPO_NAME
+#        TARGET_REPO: https://github.com/asteroid-team/$REPO_NAME
