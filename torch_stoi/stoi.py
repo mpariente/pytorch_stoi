@@ -211,4 +211,3 @@ def meanvar_norm(x, dim=-1):
     x = (x - x.mean(dim=dim, keepdim=True)) / (
             x.norm(p=2, dim=dim, keepdim=True) + EPS)
     return x
-
