@@ -40,7 +40,7 @@ jobs:
         export TARGET_REPO=https://github.com/asteroid-team/$REPO_NAME
         echo $SRC_REPO to $TARGET_REPO
         git config --global credential.username $GIT_USERNAME
-        git config --global core.askPass .github/workflows/passwd_giver.sh
+        git config --global core.askPass /.github/workflows/passwd_giver.sh
         git config --global credential.helper cache
         git clone --mirror $SRC_REPO
         cd ${REPO_NAME}.git
