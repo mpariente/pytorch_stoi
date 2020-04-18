@@ -35,18 +35,18 @@ jobs:
     - name: Clone source repo and push to target
       shell: sh
       run: |
-        set -eu
+        set -veu
         export SRC_REPO=https://github.com/$GIT_USERNAME/$REPO_NAME
         export TARGET_REPO=https://github.com/asteroid-team/$REPO_NAME
-        sh -c "echo $SRC_REPO to $TARGET_REPO"
-        sh -c "git clone --mirror $SRC_REPO"
-        sh -c "echo "CD into mirror""
-        sh -c "cd ${REPO_NAME}.git"
-        sh -c "echo '#!/bin/sh' > passwd_giver.sh"
-        sh -c "echo "exec echo \"\$GIT_PASSWORD\"" >> passwd_giver.sh"
-        sh -c "chmod +x passwd_giver.sh"
-        sh -c "git config --global core.askPass ./passwd_giver.sh"
+        echo $SRC_REPO to $TARGET_REPO
+        git clone --mirror $SRC_REPO
+        echo "CD into mirror"
+        cd ${REPO_NAME}.git
+        echo '#!/bin/sh' > passwd_giver.sh
+        echo "exec echo \"\$GIT_PASSWORD\"" >> passwd_giver.sh
+        chmod +x passwd_giver.sh
         sh -c "git config --global credential.username $GIT_USERNAME"
+        sh -c "git config --global core.askPass ./passwd_giver.sh"
         sh -c "git config --global credential.helper cache"
         sh -c "git remote set-url --push origin $TARGET_REPO"
         sh -c "git fetch -p origin"
@@ -55,7 +55,7 @@ jobs:
         sh -c "echo test, and deploy your project."
       env:
         GIT_USERNAME: mpariente
-        GIT_ASKPASS: ${{ secrets.GIT_PASSWORD }}
+        GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
         REPO_NAME: pytorch_stoi
 #        SRC_REPO: https://github.com/$GIT_USERNAME/$REPO_NAME
 #        TARGET_REPO: https://github.com/asteroid-team/$REPO_NAME
