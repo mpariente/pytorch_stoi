@@ -42,7 +42,7 @@ jobs:
         git clone --mirror $SRC_REPO
         cd ${REPO_NAME}.git
         git config --global credential.username $GIT_USERNAME
-        git config --global core.askPass .github/workflows/passwd_giver.sh
+        git config --global core.askPass ./.github/workflows/passwd_giver.sh
         git config --global credential.helper cache
         git remote set-url --push origin $TARGET_REPO
         git fetch -p origin
