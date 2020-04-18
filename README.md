@@ -1,4 +1,5 @@
 ## PyTorch implementation of STOI
+[![Build Status][travis-badge]][travis]
 
 Implementation of the classical and extended Short 
 Term Objective Intelligibility in PyTorch.
@@ -31,3 +32,7 @@ Ontoit
 * [3] J. Jensen and C. H. Taal, 'An Algorithm for Predicting the
   Intelligibility of Speech Masked by Modulated Noise Maskers',
   IEEE Transactions on Audio, Speech and Language Processing, 2016.
+
+
+[travis]: https://travis-ci.com/mpariente/pytorch_stoi
+[travis-badge]: https://travis-ci.com/mpariente/pytorch_stoi.svg?branch=master
