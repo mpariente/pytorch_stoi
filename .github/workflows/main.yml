@@ -18,7 +18,6 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - shell: bash
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     #- uses: actions/checkout@v2
 #    - env:
@@ -34,6 +33,7 @@ jobs:
 
     # Runs a set of commands using the runners shell
     - name: Clone source repo and push to target
+      shell: bash
       run: |
         set -eu
         export SRC_REPO=https://github.com/$GIT_USERNAME/$REPO_NAME
