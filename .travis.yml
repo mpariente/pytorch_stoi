@@ -1,0 +1,16 @@
+os: linux
+language: python
+
+python:
+    - 3.7
+    - 3.6
+    - 3.5
+
+install:
+    - pip install -r requirements.txt
+    - pip install pytest
+    - pip install -e .
+
+script:
+    - python --version
+    - py.test tests
