@@ -20,11 +20,11 @@ jobs:
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     #- uses: actions/checkout@v2
-    - env:
-        GIT_USERNAME: mpariente
-        GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
-        SRC_REPO: https://github.com/mpariente/pytorch_stoi
-        TARGET_REPO: https://github.com/asteroid-team/pytorch_stoi
+#    - env:
+#        GIT_USERNAME: mpariente
+#        GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
+#        SRC_REPO: https://github.com/mpariente/pytorch_stoi
+#        TARGET_REPO: https://github.com/asteroid-team/pytorch_stoi
 
 
     # Runs a single command using the runners shell
@@ -45,3 +45,8 @@ jobs:
         git push --mirror
         echo Add other actions to build,
         echo test, and deploy your project.
+      env:
+        GIT_USERNAME: mpariente
+        GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
+        SRC_REPO: https://github.com/mpariente/pytorch_stoi
+        TARGET_REPO: https://github.com/asteroid-team/pytorch_stoi
