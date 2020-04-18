@@ -79,11 +79,12 @@ class NegSTOILoss(nn.Module):
         self.nfft = 2 * self.win_len
         win = torch.from_numpy(np.hanning(self.win_len + 2)[1:-1]).float()
         self.win = nn.Parameter(win, requires_grad=False)
-        obm_mat = thirdoct(sample_rate, self.nfft, NUMBAND, MINFREQ)
+        obm_mat = thirdoct(sample_rate, self.nfft, NUMBAND, MINFREQ)[0]
         self.OBM = nn.Parameter(torch.from_numpy(obm_mat).float(),
                                 requires_grad=False)
 
-    def forward(self, est_targets: torch.Tensor, targets: torch.Tensor,):
+    def forward(self, est_targets: torch.Tensor,
+                targets: torch.Tensor,) -> torch.Tensor:
         """ Compute negative (E)STOI loss.
 
         Args:
@@ -104,14 +105,14 @@ class NegSTOILoss(nn.Module):
                                '{}'.format(targets.shape, est_targets.shape))
         # Compute STOI loss without batch size.
         if targets.ndim == 1:
-            return self.forward(targets[None], est_targets[None])[0]
+            return self.forward(est_targets[None], targets[None])[0]
         # Pack additional dimensions in batch and unpack after forward
         if targets.ndim > 2:
-            batch, *inner, wav_len = targets.shape
+            *inner, wav_len = targets.shape
             return self.forward(
+                est_targets.view(-1, wav_len),
                 targets.view(-1, wav_len),
-                est_targets.view(-1, wav_len)
-            ).view([batch] + inner)
+            ).view(inner)
 
         # Here comes the real computation, take STFT
         x_spec = self.stft(targets, self.win, self.nfft, overlap=2)
@@ -185,7 +186,7 @@ class NegSTOILoss(nn.Module):
                                                  keepdim=True) + EPS)
         # Find boolean mask of energies lower than dynamic_range dB
         # with respect to maximum clean speech energy frame
-        mask = (torch.max(x_energies, dim=1, keepdim=True)[0] - dyn_range -
+        mask = (torch.max(x_energies, dim=2, keepdim=True)[0] - dyn_range -
                 x_energies) < 0
         return mask
 
@@ -210,3 +211,4 @@ def meanvar_norm(x, dim=-1):
     x = (x - x.mean(dim=dim, keepdim=True)) / (
             x.norm(p=2, dim=dim, keepdim=True) + EPS)
     return x
+
