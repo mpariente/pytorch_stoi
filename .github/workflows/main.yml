@@ -43,7 +43,6 @@ jobs:
         echo "CD into mirror"
         cd ${REPO_NAME}.git
         git config --global credential.username $GIT_USERNAME
-      #git config --global core.askPass ./.github/workflows/passwd_giver.sh
         git config --global credential.helper cache
         git remote set-url --push origin $TARGET_REPO
         git fetch -p origin
@@ -56,3 +55,4 @@ jobs:
         REPO_NAME: pytorch_stoi
 #        SRC_REPO: https://github.com/$GIT_USERNAME/$REPO_NAME
 #        TARGET_REPO: https://github.com/asteroid-team/$REPO_NAME
+      #git config --global core.askPass ./.github/workflows/passwd_giver.sh
