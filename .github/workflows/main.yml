@@ -41,6 +41,8 @@ jobs:
         echo $SRC_REPO to $TARGET_REPO
         git clone --mirror $SRC_REPO
         cd ${REPO_NAME}.git
+        ls
+        pwd
         git config --global credential.username $GIT_USERNAME
         git config --global core.askPass ./.github/workflows/passwd_giver.sh
         git config --global credential.helper cache
