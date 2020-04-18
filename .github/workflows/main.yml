@@ -39,7 +39,7 @@ jobs:
         git config --global core.askPass $GIT_PASSWORD
         git config --global credential.helper cache
         git clone --mirror $SRC_REPO
-        cd $SRC_REPO
+        cd ${REPO_NAME}.git
         git remote set-url --push origin $TARGET_REPO
         git fetch -p origin
         git push --mirror
@@ -48,5 +48,6 @@ jobs:
       env:
         GIT_USERNAME: mpariente
         GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
-        SRC_REPO: https://github.com/mpariente/pytorch_stoi
-        TARGET_REPO: https://github.com/asteroid-team/pytorch_stoi
+        REPO_NAME: pytorch_stoi
+        SRC_REPO: https://github.com/$GIT_USERNAME/$REPO_NAME
+        TARGET_REPO: https://github.com/asteroid-team/$REPO_NAME
