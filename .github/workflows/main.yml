@@ -39,11 +39,11 @@ jobs:
         export SRC_REPO=https://github.com/$GIT_USERNAME/$REPO_NAME
         export TARGET_REPO=https://github.com/asteroid-team/$REPO_NAME
         echo $SRC_REPO to $TARGET_REPO
+        git clone --mirror $SRC_REPO
+        cd ${REPO_NAME}.git
         git config --global credential.username $GIT_USERNAME
         git config --global core.askPass /.github/workflows/passwd_giver.sh
         git config --global credential.helper cache
-        git clone --mirror $SRC_REPO
-        cd ${REPO_NAME}.git
         git remote set-url --push origin $TARGET_REPO
         git fetch -p origin
         git push --mirror
