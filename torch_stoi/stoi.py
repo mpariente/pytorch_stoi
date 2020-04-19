@@ -128,30 +128,7 @@ class NegSTOILoss(nn.Module):
         y_seg = unfold(y_tob.unsqueeze(2),
                        kernel_size=(1, self.intel_frames),
                        stride=(1, 1)).view(batch, y_tob.shape[1], N, -1)
-        if self.extended:
-            # Normalize rows and columns of intermediate intelligibility frames
-            x_n = self.rowcol_norm(x_seg)
-            y_n = self.rowcol_norm(y_seg)
-            corr_comp = x_n * y_n
-            correction = self.intel_frames * x_n.shape[-1]
-        else:
-            # Find normalization constants and normalize
-            norm_const = (torch.norm(x_seg, 2, dim=2, keepdim=True) /
-                          (torch.norm(y_seg, 2, dim=2, keepdim=True) + EPS))
-            y_seg_normed = y_seg * norm_const
-            # Clip as described in [1]
-            clip_val = 10 ** (-self.beta / 20)
-            y_prim = torch.min(y_seg_normed, x_seg * (1 + clip_val))
-            # Mean/var normalize vectors
-            y_prim = meanvar_norm(y_prim, dim=2)
-            x_seg = meanvar_norm(x_seg, dim=2)
-            # Matrix with entries summing to sum of correlations of vectors
-            corr_comp = y_prim * x_seg
-            # J, M as in [1], eq.6
-            correction = x_seg.shape[1] * x_seg.shape[-1]
-
-        # Compute average (E)STOI w. or w/o VAD.
-        sum_over = list(range(1, x_seg.ndim))  # Keep batch dim
+        # Compute mask if use_vad
         if self.use_vad:
             # Detech silent frames (boolean mask of shape (batch, 1, frame_idx)
             mask = self.detect_silent_frames(targets, self.dyn_range,
@@ -160,8 +137,36 @@ class NegSTOILoss(nn.Module):
             mask_f = unfold(mask.unsqueeze(2).float(),
                             kernel_size=(1, self.intel_frames),
                             stride=(1, 1)).view(batch, 1, N, -1)
+        else:
+            mask_f = None
+
+        if self.extended:
+            # Normalize rows and columns of intermediate intelligibility frames
+            x_n = self.rowcol_norm(x_seg, mask=mask_f)
+            y_n = self.rowcol_norm(y_seg, mask=mask_f)
+            corr_comp = x_n * y_n
+            correction = self.intel_frames * x_n.shape[-1]
+        else:
+            # Find normalization constants and normalize
+            norm_const = (masked_norm(x_seg, dim=2, keepdim=True, mask=mask_f) /
+                          (masked_norm(y_seg, dim=2, keepdim=True, mask=mask_f)
+                           + EPS))
+            y_seg_normed = y_seg * norm_const
+            # Clip as described in [1]
+            clip_val = 10 ** (-self.beta / 20)
+            y_prim = torch.min(y_seg_normed, x_seg * (1 + clip_val))
+            # Mean/var normalize vectors
+            y_prim = meanvar_norm(y_prim, dim=2, mask=mask_f)
+            x_seg = meanvar_norm(x_seg, dim=2, mask=mask_f)
+            # Matrix with entries summing to sum of correlations of vectors
+            corr_comp = y_prim * x_seg
+            # J, M as in [1], eq.6
+            correction = x_seg.shape[1] * x_seg.shape[-1]
+
+        # Compute average (E)STOI w. or w/o VAD.
+        sum_over = list(range(1, x_seg.ndim))  # Keep batch dim
+        if self.use_vad:
             corr_comp = corr_comp * mask_f
-            correction = correction * mask_f.mean(dim=sum_over)
         # Return -(E)STOI to optimize for
         return - torch.sum(corr_comp, dim=sum_over) / correction
 
@@ -200,14 +205,29 @@ class NegSTOILoss(nn.Module):
                           center=False, win_length=win_len)
 
     @staticmethod
-    def rowcol_norm(x):
+    def rowcol_norm(x, mask=None):
         """ Mean/variance normalize axis 2 and 1 of input vector"""
         for dim in [2, 1]:
-            x = meanvar_norm(x, dim=dim)
+            x = meanvar_norm(x, mask=mask, dim=dim)
         return x
 
 
-def meanvar_norm(x, dim=-1):
-    x = x - x.mean(dim=dim, keepdim=True)
-    x = x / (x.norm(p=2, dim=dim, keepdim=True) + EPS)
+def meanvar_norm(x, mask=None, dim=-1):
+    x = x - masked_mean(x, dim=dim, mask=mask, keepdim=True)
+    x = x / (masked_norm(x, p=2, dim=dim, keepdim=True, mask=mask) + EPS)
     return x
+
+
+def masked_mean(x, dim=-1, mask=None, keepdim=False):
+    if mask is None:
+        return x.mean(dim=dim, keepdim=keepdim)
+    return (x * mask).sum(dim=dim, keepdim=keepdim) / (
+        mask.sum(dim=dim, keepdim=keepdim) + EPS
+    )
+
+
+def masked_norm(x, p=2, dim=-1, mask=None, keepdim=False):
+    if mask is None:
+        return torch.norm(x, p=p, dim=dim, keepdim=keepdim)
+    return torch.norm(x * mask, p=p, dim=dim, keepdim=keepdim)
+
