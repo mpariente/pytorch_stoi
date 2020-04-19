@@ -208,6 +208,6 @@ class NegSTOILoss(nn.Module):
 
 
 def meanvar_norm(x, dim=-1):
-    x = (x - x.mean(dim=dim, keepdim=True)) / (
-            x.norm(p=2, dim=dim, keepdim=True) + EPS)
+    x = x - x.mean(dim=dim, keepdim=True)
+    x = x / (x.norm(p=2, dim=dim, keepdim=True) + EPS)
     return x
