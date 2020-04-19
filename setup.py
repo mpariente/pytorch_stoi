@@ -6,7 +6,7 @@ with open("README.md", encoding='utf-8') as fh:
 
 setup(
     name='torch_stoi',
-    version='0.0.1',
+    version='0.0.2',
     description='Computes Short Term Objective Intelligibility in PyTorch',
     author='Manuel Pariente',
     author_email='pariente.mnl@gmail.com',
