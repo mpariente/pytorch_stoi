@@ -34,15 +34,7 @@ class NegSTOILoss(nn.Module):
         we applied some changes to speed-up loss computation. See Notes section.
 
     Notes:
-        - In the NumPy version, both signals were resampled to 10kHz
-        as was done in the matlab code as well. Here, we take the choice
-        not the resample the signal but to adapt the constants to have
-        a similar effect. What if the sampling rate doesn't match the
-        10kHz then?
-        We compute a STFT with the same window support (in milliseconds) as
-        in the original version. The STFT is reduced to 1/3 octave band
-        powers (still 15 bands).
-        - In the NumPy version, some kind of simple VAD was used to remove the
+        In the NumPy version, some kind of simple VAD was used to remove the
         silent frames before chunking the signal into short-term envelope
         vectors. We don't do the same here because removing frames in a
         batch is cumbersome and inefficient.
