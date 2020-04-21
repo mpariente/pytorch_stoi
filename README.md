@@ -42,6 +42,35 @@ loss_batch = loss_func(est_speech, clean_speech)
 loss_batch.mean().backward()
 ```
 
+### Comparing NumPy and PyTorch versions : the static test
+Values obtained with the NumPy version are compared to 
+the PyTorch version in the following graphs.  
+##### 8kHz
+Classic STOI measure
+
+<img src="./plots/8kHzwithVAD.png" width="400"/> <img src="./plots/8kHzwoVAD.png" width="400"/>
+
+Extended STOI measure
+
+<img src="./plots/8kHzExtendedwithVAD.png" width="400"/> <img src="./plots/8kHzExtendedwoVAD.png" width="400">
+
+##### 16kHz
+Classic STOI measure
+
+<img src="./plots/16kHzwithVAD.png" width="400"> <img src="./plots/16kHzwoVAD.png" width="400">
+
+Extended STOI measure
+
+<img src="./plots/16kHzExtendedwithVAD.png" width="400"> <img src="./plots/16kHzExtendedwoVAD.png" width="400">
+
+
+16kHz signals used to compare both versions contained a lot
+of silence, which explains why the match is very bad without 
+VAD. 
+
+### Comparing NumPy and PyTorch versions : Training a DNN
+Coming in the near future
+
 ### References
 * [1] C.H.Taal, R.C.Hendriks, R.Heusdens, J.Jensen 'A Short-Time
   Objective Intelligibility Measure for Time-Frequency Weighted Noisy Speech',
