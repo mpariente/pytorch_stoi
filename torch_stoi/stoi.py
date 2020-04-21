@@ -1,7 +1,8 @@
 import torch
 from torch import nn
 import numpy as np
-from torch.nn.functional import unfold
+from torch.nn.functional import unfold, pad
+import torchaudio
 
 from pystoi.stoi import FS, N_FRAME, NUMBAND, MINFREQ, N, BETA, DYN_RANGE
 from pystoi.utils import thirdoct
@@ -73,8 +74,16 @@ class NegSTOILoss(nn.Module):
         self.intel_frames = N
         self.beta = BETA
         self.dyn_range = DYN_RANGE
+        self.do_resample = True
 
         # Dependant from FS
+        if self.do_resample:
+            sample_rate = FS
+            self.resample = torchaudio.transforms.Resample(
+                orig_freq=self.sample_rate,
+                new_freq=FS,
+                resampling_method='sinc_interpolation',
+            )
         self.win_len = (N_FRAME * sample_rate) // FS
         self.nfft = 2 * self.win_len
         win = torch.from_numpy(np.hanning(self.win_len + 2)[1:-1]).float()
@@ -113,6 +122,9 @@ class NegSTOILoss(nn.Module):
                 est_targets.view(-1, wav_len),
                 targets.view(-1, wav_len),
             ).view(inner)
+        if self.do_resample and self.sample_rate != FS:
+            targets = self.resample(targets)
+            est_targets = self.resample(est_targets)
 
         # Here comes the real computation, take STFT
         x_spec = self.stft(targets, self.win, self.nfft, overlap=2)
@@ -133,6 +145,7 @@ class NegSTOILoss(nn.Module):
             # Detech silent frames (boolean mask of shape (batch, 1, frame_idx)
             mask = self.detect_silent_frames(targets, self.dyn_range,
                                              self.win_len, self.win_len // 2)
+            mask = pad(mask, [0, x_tob.shape[-1] - mask.shape[-1]])
             # Unfold on the mask, to float and mean per frame.
             mask_f = unfold(mask.unsqueeze(2).float(),
                             kernel_size=(1, self.intel_frames),
@@ -167,6 +180,7 @@ class NegSTOILoss(nn.Module):
         sum_over = list(range(1, x_seg.ndim))  # Keep batch dim
         if self.use_vad:
             corr_comp = corr_comp * mask_f
+            correction = correction * mask_f.mean() + EPS
         # Return -(E)STOI to optimize for
         return - torch.sum(corr_comp, dim=sum_over) / correction
 
@@ -230,4 +244,3 @@ def masked_norm(x, p=2, dim=-1, mask=None, keepdim=False):
     if mask is None:
         return torch.norm(x, p=p, dim=dim, keepdim=keepdim)
     return torch.norm(x * mask, p=p, dim=dim, keepdim=keepdim)
-
