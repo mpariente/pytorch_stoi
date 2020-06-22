@@ -10,7 +10,7 @@ setup(
     description='Computes Short Term Objective Intelligibility in PyTorch',
     author='Manuel Pariente',
     author_email='pariente.mnl@gmail.com',
-    url='https://github.com/mpariente/torch_stoi',
+    url='https://github.com/mpariente/pytorch_stoi',
     long_description=long_description,
     long_description_content_type="text/markdown",
     license='MIT',
