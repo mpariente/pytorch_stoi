@@ -45,7 +45,7 @@ def test_shapes(ndim):
     t_dim = loss_dim + [10000]
     targets = torch.randn(t_dim)
     est_targets = torch.randn(t_dim)
-    loss_func = NegSTOILoss()
+    loss_func = NegSTOILoss(sample_rate=10000)
     loss_batch = loss_func(est_targets, targets)
     assert loss_batch.shape == targets.shape[:-1]
 
@@ -53,7 +53,7 @@ def test_shapes(ndim):
 @pytest.mark.parametrize("use_vad", [True, False])
 @pytest.mark.parametrize("extended", [True, False])
 def test_batchonly_equal(use_vad, extended):
-    loss_func = NegSTOILoss(use_vad=use_vad, extended=extended)
+    loss_func = NegSTOILoss(sample_rate=10000, use_vad=use_vad, extended=extended)
     targets = torch.randn(3, 2, 16000)
     est_targets = torch.randn(3, 2, 16000)
     threed = loss_func(est_targets, targets)
@@ -66,7 +66,7 @@ def test_batchonly_equal(use_vad, extended):
 @pytest.mark.parametrize("use_vad", [True, False])
 @pytest.mark.parametrize("extended", [True, False])
 def test_getbetter(use_vad, extended):
-    loss_func = NegSTOILoss(use_vad=use_vad, extended=extended)
+    loss_func = NegSTOILoss(sample_rate=10000, use_vad=use_vad, extended=extended)
     targets = torch.randn(1, 16000)
     old_val = None
     for eps in [5, 2, 1, 0.5, 0.1, 0.01]:
@@ -83,7 +83,7 @@ def test_getbetter(use_vad, extended):
 @pytest.mark.parametrize("extended", [True, False])
 @pytest.mark.parametrize("iteration", list(range(4)))
 def test_more_than_minusone(use_vad, extended, iteration):
-    loss_func = NegSTOILoss(use_vad=use_vad, extended=extended)
+    loss_func = NegSTOILoss(sample_rate=10000, use_vad=use_vad, extended=extended)
     targets = torch.randn(1, 16000)
     est_targets = torch.randn(1, 16000)
     loss_vals = loss_func(est_targets, targets)
