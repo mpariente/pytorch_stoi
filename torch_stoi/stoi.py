@@ -16,9 +16,10 @@ class NegSTOILoss(nn.Module):
         the STOI metric directly (use pystoi instead). See Notes.
 
     Args:
-        sample_rate (int): sample rate of the audio files
+        sample_rate (int): sample rate of audio input
         use_vad (bool): Whether to use simple VAD (see Notes)
         extended (bool): Whether to compute extended version [3].
+        do_resample (bool): Whether to resample audio input to `FS`
 
     Shapes:
         (time,) --> (1, )
@@ -55,9 +56,10 @@ class NegSTOILoss(nn.Module):
             IEEE Transactions on Audio, Speech and Language Processing, 2016.
     """
     def __init__(self,
-                 sample_rate: int = 10000,
+                 sample_rate: int,
                  use_vad: bool = True,
-                 extended: bool = False):
+                 extended: bool = False,
+                 do_resample: bool = True):
         super().__init__()
         # Independant from FS
         self.sample_rate = sample_rate
@@ -66,7 +68,7 @@ class NegSTOILoss(nn.Module):
         self.intel_frames = N
         self.beta = BETA
         self.dyn_range = DYN_RANGE
-        self.do_resample = True
+        self.do_resample = do_resample
 
         # Dependant from FS
         if self.do_resample:
