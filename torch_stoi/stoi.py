@@ -212,7 +212,7 @@ class NegSTOILoss(nn.Module):
             return torch.stft(x_padded, fft_size, hop_length=hop, window=win,
                             center=False, win_length=win_len, return_complex=False)
         # Under 1.8.0
-        except RuntimeError:
+        except TypeError:
             return torch.stft(x_padded, fft_size, hop_length=hop, window=win,
                 center=False, win_length=win_len)
 
