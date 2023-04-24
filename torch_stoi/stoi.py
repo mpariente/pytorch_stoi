@@ -127,8 +127,7 @@ class NegSTOILoss(nn.Module):
                 targets, est_targets, self.dyn_range, self.win_len,
                 self.win_len//2
             )
-            # Remove the last mask frame to replicate a bug in pystoi
-            # The bug is caused by a matlab-like indexing which removes a frame
+            # Remove the last mask frame to replicate pystoi behavior
             # See https://github.com/mpariente/pystoi/issues/32
             mask, _ = mask.sort(-1, descending=True)
             mask = mask[..., 1:]
@@ -274,15 +273,14 @@ class NegSTOILoss(nn.Module):
         - It's buggy with center=False as it discards the last frame
         - It pads the frame left and right before taking the fft instead
         of padding right
-        - Probably other reasons; torch.stft is very broken and too abstract
-        Instead we unfold and take rfft like grown-ups. This gives the same
-        result as pystoi.utils.stft.
+        Instead we unfold and take rfft. This gives the same result as
+        pystoi.utils.stft.
         """
         win_len = win.shape[0]
         hop = int(win_len / overlap)
         frames = unfold(x[:, None, None, :], kernel_size=(1, win_len),
                         stride=(1, hop))
-        # Remove last frame to replicate bug in pystoi
+        # Remove last frame to replicate pystoi behavior
         # See https://github.com/mpariente/pystoi/issues/32
         frames = frames[..., :-1]
         return torch.fft.rfft(frames*win[:, None], n=fft_size, dim=1)
