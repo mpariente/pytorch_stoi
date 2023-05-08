@@ -127,10 +127,6 @@ class NegSTOILoss(nn.Module):
                 targets, est_targets, self.dyn_range, self.win, self.win_len,
                 self.win_len//2
             )
-            # Remove the last mask frame to replicate pystoi behavior
-            # See https://github.com/mpariente/pystoi/issues/32
-            mask, _ = mask.sort(-1, descending=True)
-            mask = mask[..., 1:]
 
         # Here comes the real computation, take STFT
         x_spec = self.stft(targets, self.win, self.nfft, overlap=2)
@@ -263,7 +259,9 @@ class NegSTOILoss(nn.Module):
         x_frames = x_frames.permute(0, 2, 1)
         y_frames = y_frames.permute(0, 2, 1)
 
-        return x_sil, y_sil, mask.long()
+        mask, _ = mask.long().sort(-1, descending=True)
+
+        return x_sil, y_sil, mask
 
     @staticmethod
     def stft(x, win, fft_size, overlap=4):
@@ -278,9 +276,6 @@ class NegSTOILoss(nn.Module):
         hop = int(win_len / overlap)
         frames = unfold(x[:, None, None, :], kernel_size=(1, win_len),
                         stride=(1, hop))
-        # Remove last frame to replicate pystoi behavior
-        # See https://github.com/mpariente/pystoi/issues/32
-        frames = frames[..., :-1]
         return torch.fft.rfft(frames*win[:, None], n=fft_size, dim=1)
 
     @staticmethod
