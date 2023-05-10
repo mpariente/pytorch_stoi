@@ -12,8 +12,8 @@ EPS = 1e-8
 class NegSTOILoss(nn.Module):
     """ Negated Short Term Objective Intelligibility (STOI) metric, to be used
         as a loss function.
-        Inspired from [1, 2, 3] but not exactly the same : cannot be used as
-        the STOI metric directly (use pystoi instead). See Notes.
+        Inspired from [1, 2, 3] but not exactly the same due to a different
+        resampling technique. Use pystoi when evaluating your system.
 
     Args:
         sample_rate (int): sample rate of audio input
@@ -31,18 +31,15 @@ class NegSTOILoss(nn.Module):
         been reduced.
 
     Warnings:
-        This function cannot be used to compute the "real" STOI metric as
-        we applied some changes to speed-up loss computation. See Notes section.
+        This function does not exactly match the "real" STOI metric due to a
+        different resampling technique. Use pystoi when evaluating your system.
 
     Notes:
-        In the NumPy version, some kind of simple VAD was used to remove the
-        silent frames before chunking the signal into short-term envelope
-        vectors. We don't do the same here because removing frames in a
-        batch is cumbersome and inefficient.
-        If `use_vad` is set to True, instead we detect the silent frames and
-        keep a mask tensor. At the end, the normalized correlation of
-        short-term envelope vectors is masked using this mask (unfolded) and
-        the mean is computed taking the mask values into account.
+        `use_vad` can be set to `False` to skip the VAD for efficiency. However
+        results can become substantially different compared to the "real" STOI.
+        When `True` (default), results are very close but still slightly
+        different due to a different resampling technique.
+        Compared against mpariente/pystoi@84b1bd8.
 
     References
         [1] C.H.Taal, R.C.Hendriks, R.Heusdens, J.Jensen 'A Short-Time

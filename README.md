@@ -43,7 +43,7 @@ loss_batch.mean().backward()
 ```
 
 ### Comparing NumPy and PyTorch versions : the static test
-Values obtained with the NumPy version are compared to 
+Values obtained with the NumPy version (commit [84b1bd8](https://github.com/mpariente/pystoi/commit/84b1bd8f894c76eb5ddc3425946a4e2052e825fe)) are compared to
 the PyTorch version in the following graphs.  
 ##### 8kHz
 Classic STOI measure
