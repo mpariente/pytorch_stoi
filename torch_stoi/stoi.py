@@ -156,8 +156,8 @@ class NegSTOILoss(nn.Module):
         #         mask = mask[~not_enough]
 
         # Apply OB matrix to the spectrograms as in Eq. (1)
-        x_tob = torch.matmul(self.OBM, x_spec.abs().pow(2) + EPS).sqrt()
-        y_tob = torch.matmul(self.OBM, y_spec.abs().pow(2) + EPS).sqrt()
+        x_tob = (torch.matmul(self.OBM, x_spec.abs().pow(2)) + EPS).sqrt()
+        y_tob = (torch.matmul(self.OBM, y_spec.abs().pow(2)) + EPS).sqrt()
 
         # Perform N-frame segmentation --> (batch, 15, N, n_chunks)
         x_seg = unfold(x_tob.unsqueeze(2),
