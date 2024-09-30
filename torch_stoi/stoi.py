@@ -215,7 +215,7 @@ class NegSTOILoss(nn.Module):
         # Compute average (E)STOI w. or w/o VAD.
         output = corr_comp.mean(1)
         if self.use_vad:
-            output = output.sum(-1) / mask.sum(-1)
+            output = output.sum(-1) / (mask.sum(-1) + EPS)
         else:
             output = output.mean(-1)
 
