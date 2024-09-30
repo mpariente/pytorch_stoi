@@ -6,11 +6,12 @@ import torchaudio
 
 from pystoi.stoi import FS, N_FRAME, NUMBAND, MINFREQ, N, BETA, DYN_RANGE
 from pystoi.utils import thirdoct
+
 EPS = 1e-8
 
 
 class NegSTOILoss(nn.Module):
-    """ Negated Short Term Objective Intelligibility (STOI) metric, to be used
+    """Negated Short Term Objective Intelligibility (STOI) metric, to be used
         as a loss function.
         Inspired from [1, 2, 3] but not exactly the same due to a different
         resampling technique. Use pystoi when evaluating your system.
@@ -52,11 +53,14 @@ class NegSTOILoss(nn.Module):
             Intelligibility of Speech Masked by Modulated Noise Maskers',
             IEEE Transactions on Audio, Speech and Language Processing, 2016.
     """
-    def __init__(self,
-                 sample_rate: int,
-                 use_vad: bool = True,
-                 extended: bool = False,
-                 do_resample: bool = True):
+
+    def __init__(
+        self,
+        sample_rate: int,
+        use_vad: bool = True,
+        extended: bool = False,
+        do_resample: bool = True,
+    ):
         super().__init__()
         # Independant from FS
         self.sample_rate = sample_rate
@@ -73,19 +77,21 @@ class NegSTOILoss(nn.Module):
             self.resample = torchaudio.transforms.Resample(
                 orig_freq=self.sample_rate,
                 new_freq=FS,
-                resampling_method='sinc_interpolation',
+                resampling_method="sinc_interpolation",
             )
         self.win_len = (N_FRAME * sample_rate) // FS
         self.nfft = 2 * self.win_len
         win = torch.from_numpy(np.hanning(self.win_len + 2)[1:-1]).float()
         self.win = nn.Parameter(win, requires_grad=False)
         obm_mat = thirdoct(sample_rate, self.nfft, NUMBAND, MINFREQ)[0]
-        self.OBM = nn.Parameter(torch.from_numpy(obm_mat).float(),
-                                requires_grad=False)
+        self.OBM = nn.Parameter(torch.from_numpy(obm_mat).float(), requires_grad=False)
 
-    def forward(self, est_targets: torch.Tensor,
-                targets: torch.Tensor,) -> torch.Tensor:
-        """ Compute negative (E)STOI loss.
+    def forward(
+        self,
+        est_targets: torch.Tensor,
+        targets: torch.Tensor,
+    ) -> torch.Tensor:
+        """Compute negative (E)STOI loss.
 
         Args:
             est_targets (torch.Tensor): Tensor containing target estimates.
@@ -100,9 +106,11 @@ class NegSTOILoss(nn.Module):
             torch.Tensor, the batch of negative STOI loss
         """
         if targets.shape != est_targets.shape:
-            raise RuntimeError('targets and est_targets should have '
-                               'the same shape, found {} and '
-                               '{}'.format(targets.shape, est_targets.shape))
+            raise RuntimeError(
+                "targets and est_targets should have "
+                "the same shape, found {} and "
+                "{}".format(targets.shape, est_targets.shape)
+            )
         # Compute STOI loss without batch size.
         if targets.ndim == 1:
             return self.forward(est_targets[None], targets[None])[0]
@@ -121,8 +129,12 @@ class NegSTOILoss(nn.Module):
 
         if self.use_vad:
             targets, est_targets, mask = self.remove_silent_frames(
-                targets, est_targets, self.dyn_range, self.win, self.win_len,
-                self.win_len//2
+                targets,
+                est_targets,
+                self.dyn_range,
+                self.win,
+                self.win_len,
+                self.win_len // 2,
             )
             # Remove the last mask frame to replicate pystoi behavior
             mask, _ = mask.sort(-1, descending=True)
@@ -160,15 +172,15 @@ class NegSTOILoss(nn.Module):
         y_tob = (torch.matmul(self.OBM, y_spec.abs().pow(2)) + EPS).sqrt()
 
         # Perform N-frame segmentation --> (batch, 15, N, n_chunks)
-        x_seg = unfold(x_tob.unsqueeze(2),
-                       kernel_size=(1, self.intel_frames),
-                       stride=(1, 1)).view(batch_size, x_tob.shape[1], self.intel_frames, -1)
-        y_seg = unfold(y_tob.unsqueeze(2),
-                       kernel_size=(1, self.intel_frames),
-                       stride=(1, 1)).view(batch_size, y_tob.shape[1], self.intel_frames, -1)
+        x_seg = unfold(
+            x_tob.unsqueeze(2), kernel_size=(1, self.intel_frames), stride=(1, 1)
+        ).view(batch_size, x_tob.shape[1], self.intel_frames, -1)
+        y_seg = unfold(
+            y_tob.unsqueeze(2), kernel_size=(1, self.intel_frames), stride=(1, 1)
+        ).view(batch_size, y_tob.shape[1], self.intel_frames, -1)
         # Reapply the mask because of overlap in N-frame segmentation
         if self.use_vad:
-            mask = mask[..., self.intel_frames-1:]
+            mask = mask[..., self.intel_frames - 1 :]
             x_seg *= mask.unsqueeze(1).unsqueeze(2)
             y_seg *= mask.unsqueeze(1).unsqueeze(2)
 
@@ -183,9 +195,8 @@ class NegSTOILoss(nn.Module):
         else:
             # Find normalization constants and normalize
             # No need to pass the mask because zeros do not affect statistics
-            norm_const = (
-                x_seg.norm(p=2, dim=2, keepdim=True) /
-                (y_seg.norm(p=2, dim=2, keepdim=True) + EPS)
+            norm_const = x_seg.norm(p=2, dim=2, keepdim=True) / (
+                y_seg.norm(p=2, dim=2, keepdim=True) + EPS
             )
             y_seg_normed = y_seg * norm_const
             # Clip as described in [1]
@@ -204,7 +215,7 @@ class NegSTOILoss(nn.Module):
         # Compute average (E)STOI w. or w/o VAD.
         output = corr_comp.mean(1)
         if self.use_vad:
-            output = output.sum(-1)/mask.sum(-1)
+            output = output.sum(-1) / mask.sum(-1)
         else:
             output = output.mean(-1)
 
@@ -217,11 +228,11 @@ class NegSTOILoss(nn.Module):
         #     output_[~not_enough] = output
         #     output = output_
 
-        return - output
+        return -output
 
     @staticmethod
     def remove_silent_frames(x, y, dyn_range, window, framelen, hop):
-        """ Detects silent frames on input tensor.
+        """Detects silent frames on input tensor.
         A frame is excluded if its energy is lower than max(energy) - dyn_range
 
         Args:
@@ -233,16 +244,17 @@ class NegSTOILoss(nn.Module):
         Returns:
             torch.BoolTensor, framewise mask.
         """
-        x_frames = unfold(x[:, None, None, :], kernel_size=(1, framelen),
-                          stride=(1, hop))
-        y_frames = unfold(y[:, None, None, :], kernel_size=(1, framelen),
-                          stride=(1, hop))
+        x_frames = unfold(
+            x[:, None, None, :], kernel_size=(1, framelen), stride=(1, hop)
+        )
+        y_frames = unfold(
+            y[:, None, None, :], kernel_size=(1, framelen), stride=(1, hop)
+        )
         x_frames *= window[:, None]
         y_frames *= window[:, None]
 
         # Compute energies in dB
-        x_energies = 20 * torch.log10(torch.norm(x_frames, dim=1,
-                                                 keepdim=True) + EPS)
+        x_energies = 20 * torch.log10(torch.norm(x_frames, dim=1, keepdim=True) + EPS)
         # Find boolean mask of energies lower than dynamic_range dB
         # with respect to maximum clean speech energy frame
         mask = (x_energies.amax(2, keepdim=True) - dyn_range - x_energies) < 0
@@ -272,13 +284,14 @@ class NegSTOILoss(nn.Module):
         """
         win_len = win.shape[0]
         hop = int(win_len / overlap)
-        frames = unfold(x[:, None, None, :], kernel_size=(1, win_len),
-                        stride=(1, hop))[..., :-1]
-        return torch.fft.rfft(frames*win[:, None], n=fft_size, dim=1)
+        frames = unfold(x[:, None, None, :], kernel_size=(1, win_len), stride=(1, hop))[
+            ..., :-1
+        ]
+        return torch.fft.rfft(frames * win[:, None], n=fft_size, dim=1)
 
     @staticmethod
     def rowcol_norm(x):
-        """ Mean/variance normalize axis 2 and 1 of input vector"""
+        """Mean/variance normalize axis 2 and 1 of input vector"""
         for dim in [2, 1]:
             x = x - x.mean(dim, keepdim=True)
             x = x / (x.norm(p=2, dim=dim, keepdim=True) + EPS)
@@ -291,9 +304,7 @@ def _overlap_and_add(x_frames, hop):
     segments = -(-framelen // hop)  # Divide and round up.
 
     # Pad the framelen dimension to segments * hop and add n=segments frames
-    signal = pad(
-        x_frames, (0, segments * hop - framelen, 0, segments)
-    )
+    signal = pad(x_frames, (0, segments * hop - framelen, 0, segments))
 
     # Reshape to a 4D tensor, splitting the framelen dimension in two
     signal = signal.reshape((batch_size, num_frames + segments, segments, hop))
@@ -305,9 +316,7 @@ def _overlap_and_add(x_frames, hop):
     # Now behold the magic!! Remove last n=segments elements from second axis
     signal = signal[:, :-segments]
     # Reshape to (batch, segments, frame+segments-1, hop)
-    signal = signal.reshape(
-        (batch_size, segments, num_frames + segments - 1, hop)
-    )
+    signal = signal.reshape((batch_size, segments, num_frames + segments - 1, hop))
     # This has introduced a shift by one in all rows
 
     # Now, reduce over the columns and flatten the array to achieve the result
@@ -318,6 +327,7 @@ def _overlap_and_add(x_frames, hop):
 
 
 def _mask_audio(x, mask):
-    return torch.stack([
-        pad(xi[mi], (0, 0, 0, len(xi) - mi.sum())) for xi, mi in zip(x, mask)
-    ])
+    masked_audio = torch.stack(
+        [pad(xi[mi], (0, 0, 0, len(xi) - mi.sum())) for xi, mi in zip(x, mask)]
+    )
+    return masked_audio
